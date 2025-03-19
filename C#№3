@@ -1,0 +1,331 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+public class User
+{
+    public string Username { get; set; }
+    public string Password { get; set; }
+}
+
+public class Zadacha
+{
+    public string Owner { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public string Priority { get; set; }
+    public string Status { get; set; }
+}
+
+public class Registr
+{
+    public async Task Registrat(string Username, string Password)
+    {
+        string filePath = @"C:\Users\Никита\source\repos\Практическая №3\user.txt";
+        var lines = new List<string>();
+        if (File.Exists(filePath))
+        {
+            lines = (await File.ReadAllLinesAsync(filePath)).ToList();
+        }
+        bool Reguser = lines.Any(line => line.StartsWith(Username + "|"));
+        if (Reguser)
+        {
+            Console.WriteLine("Пользователь под таким именем уже существует");
+            return;
+        }
+        lines.Add($"{Username}|{Password}");
+        await File.WriteAllLinesAsync(filePath, lines);
+        Console.WriteLine("Пользователь добавлен");
+    }
+}
+
+public class Vxod
+{
+    public async Task<bool> Vxody(string Username, string Password)
+    {
+        string filePath = @"C:\Users\Никита\source\repos\Практическая №3\user.txt";
+        var lines = new List<string>();
+        if (File.Exists(filePath))
+        {
+            lines = (await File.ReadAllLinesAsync(filePath)).ToList();
+        }
+        bool xod = lines.Any(line =>
+        {
+            var parts = line.Split('|');
+            return parts.Length == 2 && parts[0] == Username && parts[1] == Password;
+        });
+        if (xod)
+        {
+            Console.WriteLine("Добро пожаловать " + Username);
+            return true;
+        }
+        else
+        {
+            Console.WriteLine("Неверный логин или пароль");
+            return false;
+        }
+    }
+}
+
+public class Zadachki
+{
+    public async Task ZadAdd(string Owner, string Title, string Description, string Priority, string Status)
+    {
+        string filePatha = @"C:\Users\Никита\source\repos\Практическая №3\zadachi.txt";
+        string info = $"{Owner}|{Title}|{Description}|{Priority}|{Status}";
+        await File.AppendAllTextAsync(filePatha, info + Environment.NewLine);
+    }
+
+    public async Task ZadDel(string Owner, string Title)
+    {
+        string filePatha = @"C:\Users\Никита\source\repos\Практическая №3\zadachi.txt";
+        var lines = new List<string>();
+        if (File.Exists(filePatha))
+        {
+            lines = (await File.ReadAllLinesAsync(filePatha)).ToList();
+        }
+
+        bool del = false;
+        for (int i = lines.Count - 1; i >= 0; i--)
+        {
+            var parts = lines[i].Split('|');
+            if (parts.Length >= 5 && parts[0] == Owner && parts[1] == Title)
+            {
+                lines.RemoveAt(i);
+                del = true;
+                break;
+            }
+        }
+        if (del)
+        {
+            await File.WriteAllLinesAsync(filePatha, lines);
+            Console.WriteLine("Задача удалена.");
+        }
+        else
+        {
+            Console.WriteLine("Задача не найдена.");
+        }
+    }
+
+    public async Task ZadView(string Owner)
+    {
+        string filePatha = @"C:\Users\Никита\source\repos\Практическая №3\zadachi.txt";
+        var lines = new List<string>();
+        if (File.Exists(filePatha))
+        {
+            lines = (await File.ReadAllLinesAsync(filePatha)).ToList();
+        }
+
+        Console.WriteLine("Ваши задачи:");
+        foreach (var line in lines)
+        {
+            var parts = line.Split('|');
+            if (parts.Length >= 5 && parts[0] == Owner)
+            {
+                Console.WriteLine($"Заголовок: {parts[1]}, Описание: {parts[2]}, Приоритет: {parts[3]}, Статус: {parts[4]}");
+            }
+        }
+    }
+
+    public async Task ZadEdit(string Owner, string Title)
+    {
+        string filePatha = @"C:\Users\Никита\source\repos\Практическая №3\zadachi.txt";
+        var lines = new List<string>();
+        if (File.Exists(filePatha))
+        {
+            lines = (await File.ReadAllLinesAsync(filePatha)).ToList();
+        }
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var parts = lines[i].Split('|');
+            if (parts.Length >= 5 && parts[0] == Owner && parts[1] == Title)
+            {
+                Console.WriteLine("Текущая задача:");
+                Console.WriteLine($"Заголовок: {parts[1]}");
+                Console.WriteLine($"Описание: {parts[2]}");
+                Console.WriteLine($"Приоритет: {parts[3]}");
+                Console.WriteLine($"Статус: {parts[4]}");
+                Console.WriteLine("Введите новое описание задачи:");
+                string newDescription = Console.ReadLine();
+                Console.WriteLine("Выберите новый приоритет задачи:\n 1. Низкий\n 2. Средний\n 3. Высокий");
+                string newPriority = Console.ReadLine();
+                switch (newPriority)
+                {
+                    case "1":
+                        newPriority = "Низкий";
+                        break;
+                    case "2":
+                        newPriority = "Средний";
+                        break;
+                    case "3":
+                        newPriority = "Высокий";
+                        break;
+                    default:
+                        Console.WriteLine("Некорректный ввод. Приоритет останется прежним.");
+                        newPriority = parts[3];
+                        break;
+                }
+
+                Console.WriteLine("Выберите новый статус задачи:\n 1. Недоступна\n 2. В процессе\n 3. Завершена");
+                string newStatus = Console.ReadLine();
+                switch (newStatus)
+                {
+                    case "1":
+                        newStatus = "Недоступна";
+                        break;
+                    case "2":
+                        newStatus = "В процессе";
+                        break;
+                    case "3":
+                        newStatus = "Завершена";
+                        break;
+                    default:
+                        Console.WriteLine("Некорректный ввод. Статус останется прежним.");
+                        newStatus = parts[4];
+                        break;
+                }
+
+                lines[i] = $"{Owner}|{Title}|{newDescription}|{newPriority}|{newStatus}";
+                Console.WriteLine("Задача обновлена.");
+                await File.WriteAllLinesAsync(filePatha, lines);
+                return;
+            }
+        }
+
+        Console.WriteLine("Задача не найдена.");
+    }
+}
+
+public class Program
+{
+    static async Task Main(string[] args)
+    {
+        bool exit = false;
+        while (!exit)
+        {
+            Console.WriteLine("1. Регистрация");
+            Console.WriteLine("2. Вход");
+            Console.WriteLine("3. Выход");
+            var choice = Console.ReadLine();
+            switch (choice)
+            {
+                case "1":
+                    Registr registr = new Registr();
+                    Console.WriteLine("Введите имя пользователя");
+                    var Username = Console.ReadLine();
+                    Console.WriteLine("Введите пароль");
+                    var Password = Console.ReadLine();
+                    await registr.Registrat(Username, Password);
+                    break;
+
+                case "2":
+                    Vxod vxod = new Vxod();
+                    Console.WriteLine("Введите имя пользователя");
+                    Username = Console.ReadLine();
+                    Console.WriteLine("Введите пароль");
+                    Password = Console.ReadLine();
+                    bool isLoggedIn = await vxod.Vxody(Username, Password);
+                    if (isLoggedIn)
+                    {
+                        bool zads = false;
+                        while (!zads)
+                        {
+                            Console.WriteLine("1. Создать задачу");
+                            Console.WriteLine("2. Редактировать задачу");
+                            Console.WriteLine("3. Удалить задачу");
+                            Console.WriteLine("4. Посмотреть задачи");
+                            Console.WriteLine("5. Выйти");
+                            Console.Write("Выберите действие: ");
+                            var Zadchoice = Console.ReadLine();
+                            switch (Zadchoice)
+                            {
+                                case "1":
+                                    Zadachki zadachki = new Zadachki();
+                                    Console.Write("Введите заголовок: ");
+                                    string Title = Console.ReadLine();
+                                    Console.Write("Введите описание задачи: ");
+                                    string Description = Console.ReadLine();
+                                    Console.WriteLine("Выберите приоритет задачи:\n 1. Низкий\n 2. Средний\n 3. Высокий");
+                                    string Priority = Console.ReadLine();
+                                    switch (Priority)
+                                    {
+                                        case "1":
+                                            Priority = "Низкий";
+                                            break;
+                                        case "2":
+                                            Priority = "Средний";
+                                            break;
+                                        case "3":
+                                            Priority = "Высокий";
+                                            break;
+                                        default:
+                                            Console.WriteLine("Некорректный ввод. Устанавливается приоритет по умолчанию - Низкий.");
+                                            Priority = "Низкий";
+                                            break;
+                                    }
+                                    Console.WriteLine("Выберите статус задачи:\n 1. Недоступна\n 2. В процессе\n 3. Завершена");
+                                    string Status = Console.ReadLine();
+                                    switch (Status)
+                                    {
+                                        case "1":
+                                            Status = "Недоступна";
+                                            break;
+                                        case "2":
+                                            Status = "В процессе";
+                                            break;
+                                        case "3":
+                                            Status = "Завершена";
+                                            break;
+                                        default:
+                                            Console.WriteLine("Некорректный ввод. Устанавливается статус по умолчанию - Недоступна.");
+                                            Status = "Недоступна";
+                                            break;
+                                    }
+                                    Console.WriteLine("Ваша задача:\n" + "\n" + Title + "\n" + Description + "\n" + Priority + "\n" + Status);
+                                    await zadachki.ZadAdd(Username, Title, Description, Priority, Status);
+                                    break;
+
+                                case "2":
+                                    Zadachki zadachki1 = new Zadachki();
+                                    Console.Write("Введите заголовок задачи для редактирования: ");
+                                    string TitleEdit = Console.ReadLine();
+                                    await zadachki1.ZadEdit(Username, TitleEdit);
+                                    break;
+
+                                case "3":
+                                    Zadachki zadachki2 = new Zadachki();
+                                    Console.Write("Введите заголовок задачи для удаления: ");
+                                    string Dele = Console.ReadLine();
+                                    await zadachki2.ZadDel(Username, Dele);
+                                    break;
+
+                                case "4":
+                                    Zadachki zadachki3 = new Zadachki();
+                                    await zadachki3.ZadView(Username);
+                                    break;
+
+                                case "5":
+                                    zads = true;
+                                    break;
+
+                                default:
+                                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+
+                case "3":
+                    exit = true;
+                    break;
+
+                default:
+                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                    break;
+            }
+        }
+    }
+}
